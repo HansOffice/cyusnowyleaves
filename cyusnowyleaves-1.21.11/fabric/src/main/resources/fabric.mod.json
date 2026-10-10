@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "cyusnowyleaves",
+  "version": "${version}",
+  "name": "CyuSnowyLeaves",
+  "description": "Client-side Bedrock-style snowy leaf tinting for cold weather.",
+  "authors": ["HansOffice"],
+  "contact": {},
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "org.cyu.snowyleaves.client.CyuSnowyLeavesClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "${minecraftVersion}",
+    "java": ">=21",
+    "fabric-lifecycle-events-v1": "*",
+    "fabric-rendering-v1": "*"
+  }
+}
