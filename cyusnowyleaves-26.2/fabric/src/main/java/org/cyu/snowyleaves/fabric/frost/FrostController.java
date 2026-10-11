@@ -3,6 +3,7 @@ package org.cyu.snowyleaves.fabric.frost;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
 import org.cyu.snowyleaves.fabric.color.SnowyLeafColorRegistry;
 import org.cyu.snowyleaves.fabric.config.SnowyLeavesConfig;
@@ -59,7 +60,7 @@ public final class FrostController {
     }
 
     private void refreshLeafRenderIfNeeded(Minecraft client, double previousFrostAmount) {
-        if (client.player == null || client.levelRenderer == null) {
+        if (client.player == null || client.level == null) {
             return;
         }
         if (renderRefreshCooldown > 0) {
@@ -78,13 +79,13 @@ public final class FrostController {
         BlockPos center = client.player.blockPosition();
         int horizontalRadius = 64;
         int verticalRadius = 40;
-        client.levelRenderer.setBlocksDirty(
-                center.getX() - horizontalRadius,
-                center.getY() - verticalRadius,
-                center.getZ() - horizontalRadius,
-                center.getX() + horizontalRadius,
-                center.getY() + verticalRadius,
-                center.getZ() + horizontalRadius
+        client.level.setSectionRangeDirty(
+                SectionPos.blockToSectionCoord(center.getX() - horizontalRadius),
+                SectionPos.blockToSectionCoord(center.getY() - verticalRadius),
+                SectionPos.blockToSectionCoord(center.getZ() - horizontalRadius),
+                SectionPos.blockToSectionCoord(center.getX() + horizontalRadius),
+                SectionPos.blockToSectionCoord(center.getY() + verticalRadius),
+                SectionPos.blockToSectionCoord(center.getZ() + horizontalRadius)
         );
         lastRenderRefreshBucket = bucket;
         renderRefreshCooldown = 24;

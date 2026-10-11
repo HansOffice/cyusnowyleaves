@@ -19,7 +19,7 @@ public final class CyuSnowyLeavesNeoForge {
     public static final Logger LOGGER = LoggerFactory.getLogger("CyuSnowyLeaves");
 
     public CyuSnowyLeavesNeoForge(IEventBus modEventBus, ModContainer container) {
-        if (!FMLEnvironment.dist.isClient()) {
+        if (!FMLEnvironment.getDist().isClient()) {
             LOGGER.warn("CyuSnowyLeaves is a client-only mod and is disabled on dedicated servers.");
             return;
         }

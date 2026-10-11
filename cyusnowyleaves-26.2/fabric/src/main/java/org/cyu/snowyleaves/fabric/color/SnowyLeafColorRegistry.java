@@ -1,10 +1,11 @@
 package org.cyu.snowyleaves.fabric.color;
 
-import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.BlockColorRegistry;
+import net.minecraft.client.color.block.BlockTintSource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import org.cyu.snowyleaves.fabric.config.SnowyLeavesConfig;
 import org.cyu.snowyleaves.fabric.frost.FrostController;
@@ -12,6 +13,8 @@ import org.cyu.snowyleaves.fabric.frost.SnowyWeatherRules;
 import org.cyu.snowyleaves.core.SnowTint;
 import org.cyu.snowyleaves.core.SnowVisualRules;
 import org.cyu.snowyleaves.core.VisualFrostCache;
+
+import java.util.List;
 
 public final class SnowyLeafColorRegistry {
     private static final int MAX_VISUAL_FROST_CACHE_SIZE = 32768;
@@ -21,11 +24,18 @@ public final class SnowyLeafColorRegistry {
     }
 
     public static void register(SnowyLeavesConfig config, FrostController frostController) {
-        ColorProviderRegistry.BLOCK.register((state, level, pos, tintIndex) ->
-                        color(state, level, pos, config, frostController),
-                LeafBlocks.SUPPORTED
-        );
+        BlockTintSource color = new BlockTintSource() {
+            @Override
+            public int color(BlockState state) {
+                return SnowyLeafColorRegistry.color(state, null, null, config, frostController);
+            }
 
+            @Override
+            public int colorInWorld(BlockState state, BlockAndTintGetter level, BlockPos pos) {
+                return SnowyLeafColorRegistry.color(state, level, pos, config, frostController);
+            }
+        };
+        BlockColorRegistry.register(List.of(color), LeafBlocks.SUPPORTED);
     }
 
     private static int color(
@@ -38,12 +48,12 @@ public final class SnowyLeafColorRegistry {
         int originalColor = LeafColorSampler.originalColor(state, level, pos);
         ClientLevel clientLevel = Minecraft.getInstance().level;
         if (!config.enabled || pos == null || clientLevel == null) {
-            return originalColor;
+            return opaque(originalColor);
         }
 
         double leafStrength = LeafBlocks.strength(state.getBlock());
         if (leafStrength <= 0.0) {
-            return originalColor;
+            return opaque(originalColor);
         }
 
         double biomeWeight = config.enableBiomeCheck ? SnowyWeatherRules.skyWeatherWeight(clientLevel, pos) : 1.0;
@@ -51,7 +61,7 @@ public final class SnowyLeafColorRegistry {
         float targetFrost = frostController.frostAt(clientLevel, pos, biomeWeight, variation) * (float) leafStrength;
         if (targetFrost <= 0.0001F) {
             VISUAL_FROST_CACHE.clear(pos.asLong());
-            return originalColor;
+            return opaque(originalColor);
         }
 
         float frostAmount = VISUAL_FROST_CACHE.approach(
@@ -62,7 +72,11 @@ public final class SnowyLeafColorRegistry {
                 config.meltingSpeed
         );
 
-        return SnowTint.mix(originalColor, config.snowColorRgb(), frostAmount);
+        return opaque(SnowTint.mix(originalColor, config.snowColorRgb(), frostAmount));
+    }
+
+    private static int opaque(int rgb) {
+        return 0xFF000000 | (rgb & 0x00FFFFFF);
     }
 
     private static double stableVariation(BlockPos pos) {
